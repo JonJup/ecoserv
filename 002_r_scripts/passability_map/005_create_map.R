@@ -23,7 +23,7 @@ source("002_r_scripts/functions/F_003_reverse_pasability_map.R")
 
 # load data ---------------------------------------------------------------
 rivers   <- readRDS("001_data/map_passability/2020-08-26_rivers_w_flow_and_barriers.RDS")
-samples  <- st_read("001_data/Probestellen/2020-05-27_all_sites.gpkg")
+samples  <- readRDS("001_raw_data/probestellen/2020-09-23_all_sites.RDS")
 
 # carpeting ---------------------------------------------------------------
 rivers %<>% st_as_sf()

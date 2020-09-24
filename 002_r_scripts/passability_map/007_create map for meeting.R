@@ -18,7 +18,7 @@ sf_pas      <- st_read("003_processed_data/map_passability/2020-08-27_temp_4326.
 sf_sites    <- st_read("003_processed_data/map_passability/2020-08-26_sites_for_plot.gpkg")
 sf_pas_fake <- st_read("003_processed_data/map_passability/2020-09-20_fake_map_meeting.gpkg")
 sf_tmo      <- st_read("001_raw_data/tmo_region_map/TMO_region.shp")
-
+sf_schutz   <- st_read("../Ecoserv/001_data/Aussengrenzen_Schutzgebiete/DLM250_Schutzgebiete.shp")
 
 # carpet data  ------------------------------------------------------------
 # fake 
@@ -29,6 +29,7 @@ sf_pas      %<>% st_transform(crs = 4326)
 sf_sites    %<>% st_transform(crs = 4326)
 sf_pas_fake %<>% st_transform(crs = 4326)
 sf_tmo      %<>% st_transform(crs = 4326)
+sf_schutz      %<>% st_transform(crs = 4326)
 
 # rename eval_score_down
 names(sf_pas)[7]      <- "Passierwahrscheinlichkeit"
@@ -49,6 +50,7 @@ sf_pas_cropped      <- st_crop(sf_pas     , crop_box_buffer)
 sf_pas_fake_cropped <- st_crop(sf_pas_fake, crop_box_buffer)
 sf_site_cropped     <- st_crop(sf_sites   , crop_box_buffer)
 sf_tmo_cropped      <- st_crop(sf_tmo,      crop_box_buffer)
+sf_schutz_cropped   <- st_crop(st_buffer(sf_schutz,0), crop_box_buffer)
 
 # download open street map as background 
 osm <- read_osm(sf_pas_cropped, ext=1.1) 
@@ -56,8 +58,8 @@ osm <- read_osm(sf_pas_cropped, ext=1.1)
 real <- osm %>%
   tm_shape() +
   tm_rgb(alpha = 0.5) +
-  tm_shape(sf_tmo_cropped) +
-  tm_polygons(alpha = 0.7) +
+  #tm_shape(sf_schutz_cropped) +
+  #tm_polygons(alpha = 0.7) +
   tm_shape(sf_pas_cropped) +
   tm_lines(
     col = "Passierwahrscheinlichkeit",
@@ -81,8 +83,8 @@ real
 fake <- osm %>%
   tm_shape() +
   tm_rgb(alpha = 0.5) +
-  tm_shape(sf_tmo_cropped) +
-  tm_polygons(alpha = 0.7) +
+  #tm_shape(sf_tmo_cropped) +
+  #tm_polygons(alpha = 0.7) +
   tm_shape(sf_pas_fake_cropped) +
   tm_lines(
     col = "Passierwahrscheinlichkeit",
@@ -102,9 +104,9 @@ fake <- osm %>%
 
 fake
 
-# save to file  -----------------------------------------------------------
+ # save to file  -----------------------------------------------------------
 
-tmap_save(filename = paste0("004_plots/passability_map/", Sys.Date(), "_map_meeting.jpeg"), tm = real)
-tmap_save(filename = paste0("004_plots/passability_map/", Sys.Date(), "_map_meeting_fake.jpeg"), tm = fake)
+# tmap_save(filename = paste0("004_plots/passability_map/", Sys.Date(), "_map_meeting.jpeg"), tm = real)
+# tmap_save(filename = paste0("004_plots/passability_map/", Sys.Date(), "_map_meeting_fake.jpeg"), tm = fake)
 
 
