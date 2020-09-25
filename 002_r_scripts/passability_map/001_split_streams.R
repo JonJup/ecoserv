@@ -13,10 +13,10 @@ setwd(here())
 source("002_r_scripts/functions/F_004_split_crosses.R")
 source("002_r_scripts/functions/F_005_split_touches.R")
 # load data ---------------------------------------------------------------
-rn1 <- st_read("001_data/Gewaessernetze/Gewaessernetz_Pfalz_Hunsrueck/2020-07-31_fixed_rlp_river_network.gpkg")
-rn2 <- st_read("001_data/Gewaessernetze/Gewaessernetz_Nordvogesen/River.shp")
-rn3 <- st_read("001_data/Gewaessernetze/Gewässernetz_Saarland/Gewaesser/gewaesser.gpkg")
-rn4 <- st_read("001_data/Gewaessernetze/Gewaessernetz_Schwarzwald/Gewaessernetz.shp")
+rn1 <- st_read("001_raw_data/gewaessernetze/Gewaessernetz_Pfalz_Hunsrueck/2020-07-31_fixed_rlp_river_network.gpkg")
+rn2 <- st_read("001_raw_data/gewaessernetze/Gewaessernetz_Nordvogesen/River.shp")
+rn3 <- st_read("001_raw_data/gewaessernetze/Gewaessernetz_Saarland/Gewaesser/gewaesser.gpkg")
+rn4 <- st_read("001_raw_data/gewaessernetze/Gewaessernetz_Schwarzwald/Gewaessernetz.shp")
 
 # maps  -------------------------------------------------------------------
 #tm_shape(rn1) + tm_lines() + tm_shape(rn2) + tm_lines() + tm_shape(rn3) + tm_lines() + tm_shape(rn4) + tm_lines()

@@ -209,10 +209,9 @@ for (j in c(1:31)) {
         }
 }
 
-old_temp <- dir("001_data/map_passability/", pattern = "_temp.gpkg", full.names = T)
+old_temp <- dir("001_data/map_passability/", pattern = "_final_passability_map.RDS", full.names = T)
 file.remove(old_temp)
-st_write(test_rivers, paste0("001_data/map_passability/",Sys.Date(),"_temp.gpkg"))
-#st_write(samples, paste0("001_data/map_passability/",Sys.Date(), "_sites_for_plot.gpkg"))
+saveRDS(test_rivers, paste0("001_data/map_passability/",Sys.Date(),"_final_passability_map.RDS"))
 rm(list = ls())
 
 # Manual Fixes to stream direction ----------------------------------------
