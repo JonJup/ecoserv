@@ -22,7 +22,7 @@ setwd(here())
 source("002_r_scripts/functions/F_003_reverse_pasability_map.R")
 
 # load data ---------------------------------------------------------------
-rivers   <- readRDS("001_data/map_passability/2020-08-26_rivers_w_flow_and_barriers.RDS")
+rivers   <- readRDS("003_processed_data/map_passability/2020-08-26_rivers_w_flow_and_barriers.RDS")
 samples  <- readRDS("001_raw_data/probestellen/2020-09-23_all_sites.RDS")
 
 # carpeting ---------------------------------------------------------------
@@ -209,9 +209,9 @@ for (j in c(1:31)) {
         }
 }
 
-old_temp <- dir("001_data/map_passability/", pattern = "_final_passability_map.RDS", full.names = T)
-file.remove(old_temp)
-saveRDS(test_rivers, paste0("001_data/map_passability/",Sys.Date(),"_final_passability_map.RDS"))
+#old_temp <- dir("001_data/map_passability/", pattern = "_final_passability_map.RDS", full.names = T)
+#file.remove(old_temp)
+saveRDS(test_rivers, paste0("003_processed_data/map_passability/",Sys.Date(),"_final_passability_map.RDS"))
 rm(list = ls())
 
 # Manual Fixes to stream direction ----------------------------------------

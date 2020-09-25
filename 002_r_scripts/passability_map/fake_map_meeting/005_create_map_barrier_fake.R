@@ -1,41 +1,31 @@
-#### ----------------------------------- ### 
-#### --- Create Fake Map for Meeting --- ### 
-#### ----------------------------------- ### 
+# ---------------------------------- #
+### --- Create passability map --- ### 
+# ---------------------------------- #
 
-#date written: 20.09.20 
+#date written: 25.09.20
 #date changes: 
-#date used   : 20.09.20
+#date used   : 25.09.20
 #Jonathan Jupke 
 # Ecoserv 
-# Fake Passability Map Meeting 
+# Passability Map 
 
 #-- what? -- # 
-
-#Add fake passability information to the single stream segments. Information is
-#created by assigning fake passibility scores to barriers that are drawn from a
-#normal distribution with the original passability score as mean.
+# Create passability map with fake barrier values for Ecoserv  
 
 
 # setup -------------------------------------------------------------------
 pacman::p_load(sf, dplyr, magrittr,
                here, purrr, data.table,
-               tmap)
+               tmap, lwgeom, stringr)
 setwd(here())
 
 source("002_r_scripts/functions/F_003_reverse_pasability_map.R")
 
 # load data ---------------------------------------------------------------
-rivers   <- readRDS("001_data/map_passability/2020-08-26_rivers_w_flow_and_barriers.RDS")
-samples  <- st_read("001_data/Probestellen/2020-05-27_all_sites.gpkg")
+rivers   <- readRDS("003_processed_data/map_passability/fake map/2020-09-25_rivers_w_flow_and_fake_barriers.RDS")
+samples  <- readRDS("001_raw_data/probestellen/2020-09-23_all_sites.RDS")
 
-rivers$score_down <- purrr::map_dbl(.x = rivers$score_down, 
-                                     .f= rnorm,
-                                     n = 1,
-                                     sd = 0.1)
-        
-rivers$score_down [which(rivers$score_down < 0)] <- 0
-rivers$score_down [which(rivers$score_down > 1)] <- 1
-
+# carpeting ---------------------------------------------------------------
 rivers %<>% st_as_sf()
 if (st_crs(samples) != st_crs(rivers)) samples %<>% st_transform(crs = st_crs(rivers))
 
@@ -53,7 +43,7 @@ rivers  <- rivers[!ecoserv_id %in% c("swd_32406", "swd_37658", "swd_37712",
                                      
                                      # "vdn_4309",
                                      # "vdn_7732"
-)]
+                                     )]
 rivers[ecoserv_id == "rlp_54"   , FROM := "P52"]
 rivers[ecoserv_id == "rlp_10143", FROM := "P2634"]
 rivers[ecoserv_id == "rlp_10143", TO   := "P2638"]
@@ -128,7 +118,7 @@ reverse(c(29,
           # Fakies: Sind richtig aber aus praktischen Gründen umgedreht 
           # 16 ist schon Rhein 
           
-))
+          ))
 
 
 
@@ -162,65 +152,64 @@ for (j in c(1:31)) {
                 # Which Point did the last segement flow into   
                 # This object can be read as: 
                 # The object in row names(going_to)[i] end in point going_to[[i]]
-                last_id_ul <- unlist(last_id)
-                pre_going_to <- test_rivers[last_id_ul, TO]
-                going_to <- list()
-                for (i in seq_along(pre_going_to)) {
-                        going_to[[i]] <- pre_going_to[i]     
-                        names(going_to)[i] <- as.character(unlist(last_id))[i]
-                }
-                
-                # What is the updated score of the last segement? 
-                # This object can be read as: 
-                # The object in row names(last_score_down)[i] has an updated score of last_score_down[[i]]
-                pre_last_score_down <- test_rivers[last_id_ul, score_down_eval]
-                last_score_down <- list()
-                for (i in seq_along(pre_last_score_down)) {
-                        last_score_down[[i]] <- pre_last_score_down[i]     
-                        names(last_score_down)[i] <- as.character(unlist(last_id))[i]
-                } 
-                if (sum(duplicated(going_to)) != 0) {
-                        dup_id <- which(duplicated(going_to))      
-                        # note 27.08: I removed two brackets around dup_id and added the unlists
-                        dup_id <- which(unlist(going_to) %in% unlist(going_to[dup_id]))
-                        dup_score_down <- last_score_down[dup_id]
-                        max_id <- which(dup_score_down == max(unlist(dup_score_down)))
-                        last_score_down[dup_id] <-  last_score_down[max_id]
-                } 
-                
-                
-                
-                # What rivers start from the last end point
-                # The object pre_nxt_stop is a vector with object row numbers 
-                # The object nxt_stop is a list with 
-                (pre_nxt_stop <- which(test_rivers$FROM %in% going_to))
-                nxt_stop <- list()
-                for (i in seq_along(pre_nxt_stop)) {
-                        # id of a row that is the next river segment 
-                        nxt_stop[[i]] <-  pre_nxt_stop[i]
-                        # Name = name of the point from which this one starts
-                        # where does this one come from 
-                        loop_from <- test_rivers[pre_nxt_stop[i], FROM]
-                        loop_name <- test_rivers[row_id %in% as.character(unlist(last_id)) & TO == loop_from, row_id]
-                        #if (length(loop_name) > 1) loop_name <- names(last_score_down)
-                        names(nxt_stop)[i] <- loop_name
-                }
-                
-                if (length(nxt_stop) == 0) break()
-                for (i in seq_along(nxt_stop)) {
-                        loop_var <- names(nxt_stop)[i]
-                        test_rivers[nxt_stop[[i]], c("score_down_eval", "evaled") := .(score_down * unlist(last_score_down[loop_var]), 1)]
-                        # test_rivers[nxt_stop[[i]], c("score_down_eval", "evaled") := .(score_down * unlist(last_score_down[loop_var]), 1)]
-                }
-                #test_rivers[nxt_stop, c("score_down_eval", "evaled") := .(score_down * last_score_down,1)]
-                last_id <- nxt_stop
-                print(paste0("round ", counter,": ", names(going_to)))
-                counter <- counter + 1
+                        last_id_ul <- unlist(last_id)
+                        pre_going_to <- test_rivers[last_id_ul, TO]
+                        going_to <- list()
+                        for (i in seq_along(pre_going_to)) {
+                                going_to[[i]] <- pre_going_to[i]     
+                                names(going_to)[i] <- as.character(unlist(last_id))[i]
+                        }
+                        
+                        # What is the updated score of the last segement? 
+                        # This object can be read as: 
+                        # The object in row names(last_score_down)[i] has an updated score of last_score_down[[i]]
+                        pre_last_score_down <- test_rivers[last_id_ul, score_down_eval]
+                        last_score_down <- list()
+                        for (i in seq_along(pre_last_score_down)) {
+                                last_score_down[[i]] <- pre_last_score_down[i]     
+                                names(last_score_down)[i] <- as.character(unlist(last_id))[i]
+                        } 
+                        if (sum(duplicated(going_to)) != 0) {
+                                dup_id <- which(duplicated(going_to))      
+                                # note 27.08: I removed two brackets around dup_id and added the unlists
+                                dup_id <- which(unlist(going_to) %in% unlist(going_to[dup_id]))
+                                dup_score_down <- last_score_down[dup_id]
+                                max_id <- which(dup_score_down == max(unlist(dup_score_down)))
+                                last_score_down[dup_id] <-  last_score_down[max_id]
+                        } 
+                        
+                        
+                        
+                        # What rivers start from the last end point
+                        # The object pre_nxt_stop is a vector with object row numbers 
+                        # The object nxt_stop is a list with 
+                        (pre_nxt_stop <- which(test_rivers$FROM %in% going_to))
+                        nxt_stop <- list()
+                        for (i in seq_along(pre_nxt_stop)) {
+                                # id of a row that is the next river segment 
+                                nxt_stop[[i]] <-  pre_nxt_stop[i]
+                                # Name = name of the point from which this one starts
+                                # where does this one come from 
+                                loop_from <- test_rivers[pre_nxt_stop[i], FROM]
+                                loop_name <- test_rivers[row_id %in% as.character(unlist(last_id)) & TO == loop_from, row_id]
+                                #if (length(loop_name) > 1) loop_name <- names(last_score_down)
+                                names(nxt_stop)[i] <- loop_name
+                        }
+                        
+                        if (length(nxt_stop) == 0) break()
+                        for (i in seq_along(nxt_stop)) {
+                                loop_var <- names(nxt_stop)[i]
+                                test_rivers[nxt_stop[[i]], c("score_down_eval", "evaled") := .(score_down * unlist(last_score_down[loop_var]), 1)]
+                                # test_rivers[nxt_stop[[i]], c("score_down_eval", "evaled") := .(score_down * unlist(last_score_down[loop_var]), 1)]
+                        }
+                        #test_rivers[nxt_stop, c("score_down_eval", "evaled") := .(score_down * last_score_down,1)]
+                        last_id <- nxt_stop
+                        print(paste0("round ", counter,": ", names(going_to)))
+                        counter <- counter + 1
         }
 }
 
-# old_temp <- dir("001_data/map_passability/", pattern = "_temp.gpkg", full.names = T)
-# file.remove(old_temp)
-st_write(test_rivers, paste0("001_data/map_passability/",Sys.Date(),"_fake_map_meeting.gpkg"))
-#st_write(samples, paste0("001_data/map_passability/",Sys.Date(), "_sites_for_plot.gpkg"))
+
+saveRDS(test_rivers, paste0("003_processed_data/map_passability/fake map/",Sys.Date(),"_final_passability_map_fake.RDS"))
 rm(list = ls())
+
