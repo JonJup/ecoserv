@@ -86,7 +86,7 @@ map04 <- osm %>%
   tm_layout(
     legend.bg.color = "white", frame = F,
     legend.frame = T,
-    legend.outside = ,
+    legend.outside = T ,
     title = "60% entfernt"
   )     
 map06 <- osm %>% 
