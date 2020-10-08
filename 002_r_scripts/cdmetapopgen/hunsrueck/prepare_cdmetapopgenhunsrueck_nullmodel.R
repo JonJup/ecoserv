@@ -1,21 +1,30 @@
 # --------------------------------- #
 ### -------- CDMetaPOPGEN ------- ###
 ### --- Prepare Hunrueck data --- ###
+### --- null model -------------- ### 
 # --------------------------------- #
 
 
-# date written: 23.09.20 + 01.10 + 08.10
+# date written:  08.10 
 # date changed: 
 # date used   : 
 # Project: Ecoserv 
 # Jonathan Jupke 
-# Prepare data for CDMetaPopGen modelling of Hunsrueck sites. 
-
+# Prepare data for CDMetaPopGen modeling of Hunsrueck sites. This script create
+# a null-model in which all barriers have a passability of 1. This will help me
+# understand how the barrier values influence the effective distance.
 
 # setup -------------------------------------------------------------------
-pacman::p_load(data.table, gdistance, here, raster, sf, stars, tmap)
+pacman::p_load(
+        data.table, 
+        gdistance, 
+        here, 
+        raster, 
+        sf, 
+        stars, 
+        tmap
+        )
 setwd(here())
-
 
 # load data ---------------------------------------------------------------
 sf_sites <- readRDS("001_raw_data/probestellen/2020-09-23_all_sites.RDS")
@@ -33,6 +42,9 @@ source("002_r_scripts/functions/002_function_create_barrier_raster.R")
 #         tm_shape(sf_barri) + tm_dots(col = "grey")
 
 # carpet ------------------------------------------------------------------
+# set all passabilities to 1 
+sf_barri$score_down <- 1 
+sf_barri$score_up <- 1 
 # subset sites to Hunsrueck
 sf_sub_sites       <- sf_sites[9:15,]
 sf_sub_sites_trans <- st_transform(x = sf_sub_sites, crs = st_crs(ra_river))
@@ -67,41 +79,21 @@ names(sf_barri_up)[3] <- "conductance"
 
 rm(sf_barri_trans_cropped);gc()
 
-# ra_barrier_down <- create_barrier_raster(barriers = sf_barri_down, stream_network =  ra_river_cropped)
-# ra_barrier_up   <- create_barrier_raster(barriers = sf_barri_up  , stream_network =  ra_river_cropped)
+ra_barrier_down <- create_barrier_raster(barriers = sf_barri_down, stream_network =  ra_river_cropped)
+ra_barrier_up   <- create_barrier_raster(barriers = sf_barri_up  , stream_network =  ra_river_cropped)
 rm(create_barrier_raster)
 ## -- save to file -- ## 
-#saveRDS(ra_barrier_down, paste0("003_processed_data/cdmetapop/hunsrueck/001_", Sys.Date(), "_raster_w_barriers_down.RDS"))
-#saveRDS(ra_barrier_up  , paste0("003_processed_data/cdmetapop/hunsrueck/001_", Sys.Date(), "_raster_w_barriers_up.RDS"))  
-ra_barrier_up=readRDS("003_processed_data/cdmetapop/hunsrueck/001_2020-10-01_raster_w_barriers_up.RDS")
-ra_barrier_down=readRDS("003_processed_data/cdmetapop/hunsrueck/001_2020-10-01_raster_w_barriers_down.RDS")
+#saveRDS(ra_barrier_down, paste0("003_processed_data/cdmetapop/hunsrueck/001_", Sys.Date(), "_raster_w_barriers_down.RDS"))# saveRDS(ra_barrier_down, paste0("003_processed_data/cdmetapop/hunsrueck/001_", Sys.Date(), "_raster_w_barriers_down.RDS"))
+#saveRDS(ra_barrier_up  , paste0("003_processed_data/cdmetapop/hunsrueck/001_", Sys.Date(), "_raster_w_barriers_up.RDS"))# saveRDS(ra_barrier_up  , paste0("003_processed_data/cdmetapop/hunsrueck/001_", Sys.Date(), "_raster_w_barriers_up.RDS"))
+
 # gdistance ---------------------------------------------------------------
-
-ra_barrier_up
-table(values(ra_barrier_down))
-custom_trasition_function <- function(x){
-        if(any(x==0)){
-                out <- 0
-        }else{
-                out <- min(x)
-        }
-}
-tmap_mode("view")
-tm_shape(ra_barrier_up)+tm_raster()
-
 
 sites2    <- ptr(points = sf_sub_sites_trans, 
                  raster = stars::st_as_stars(ra_barrier_down))
 sites_sp  <- as_Spatial(sites2)
 rm(sf_sub_sites_trans, sites2); gc()
 
-tr_up   <- transition(ra_barrier_up, transitionFunction=custom_trasition_function, directions=8)
-tr_down <- transition(ra_barrier_up, transitionFunction=custom_trasition_function, directions=8)
-
-
-tm_shape(raster(tr_up)) + tm_raster()
-
-cost_distance_matrix_up   <- costDistance(x = ,   
+cost_distance_matrix_up   <- costDistance(x = transition(ra_barrier_up, transitionFunction=min, directions=8),   
                                           fromCoords = sites_sp, 
                                           toCoords = sites_sp) * 100
 cost_distance_matrix_down <- costDistance(x = transition(ra_barrier_down, transitionFunction=min, directions=8), 
@@ -109,8 +101,8 @@ cost_distance_matrix_down <- costDistance(x = transition(ra_barrier_down, transi
                                           toCoords = sites_sp) * 100
 
 fwrite(x = cost_distance_matrix_up,
-       file = "003_processed_data/cdmetapop/hunsrueck/002_cd_matrix_up.csv",
+       file = "003_processed_data/cdmetapop/hunsrueck/002_cd_matrix_up_null.csv",
        col.names = F)
 fwrite(x = cost_distance_matrix_down,
-       file = "003_processed_data/cdmetapop/hunsrueck/002_cd_matrix_down.csv",
+       file = "003_processed_data/cdmetapop/hunsrueck/002_cd_matrix_down_null.csv",
        col.names = F)
