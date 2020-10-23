@@ -1,0 +1,11 @@
+base
+igraph
+data.table
+dplyr
+magrittr
+riverdist
+shp2graph
+sf
+sp
+tmap
+here
