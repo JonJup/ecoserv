@@ -14,22 +14,48 @@ add_river = function(
                      from_line, 
                      to_line, 
                      from_point, 
-                     to_point, 
-                     cast_p1, 
-                     cast_p2) {
+                     to_point
+                     # cast_p1, 
+                     # cast_p2
+                     ) {
         
-        
-        st_data = st_as_sf(dt_data)
-        
-        st_data %>% 
-                filter(ecoserv_id %in% c(from_line, to_line)) %>%  
-                st_cast(to="POINT") %>% 
-                mutate(p_id = row_number()) %>% 
-                filter(p_id %in% c(cast_p1, cast_p2)) %>%
-                st_coordinates(st_new_line) %>%
-                .[, -3] %>%
-                st_linestring() %>% 
-                st_sfc() -> 
+        options(warn = -1)
+        st_data     = st_as_sf(dt_data)
+        st_data_sub =
+                st_data %>%
+                filter(ecoserv_id %in% c(from_line, to_line))
+        st_data_sub_points =
+                st_data_sub %>%
+                st_cast(to = "POINT") %>%
+                mutate(p_id = row_number())
+        st_line_to = 
+                st_data_sub %>%
+                filter(ecoserv_id == to_line)
+        st_line_from = 
+                st_data_sub %>%
+                filter(ecoserv_id == from_line)
+        st_points_from = 
+                st_data_sub_points %>%
+                filter(ecoserv_id == from_line)
+        st_points_to = 
+                st_data_sub_points %>%
+                filter(ecoserv_id == to_line)
+        st_points_from = st_points_from[c(1, nrow(st_points_from)),]
+        st_points_to   = st_points_to[c(1, nrow(st_points_to)),]
+        p_id1          = st_nearest_feature(x = st_line_to,
+                                            y = st_points_from)
+        p_id2          = st_nearest_feature(x = st_line_from,
+                                            y = st_points_to)
+        p_id1          = st_points_from$p_id[p_id1]
+        p_id2          = st_points_to$p_id[p_id2]
+                
+        st_data_sub_points %>%
+                filter(p_id %in% c(p_id1, p_id2)) %>%
+                st_coordinates(st_data_sub_points) %>%
+                .[,-3] %>%
+                list() %>%
+                st_multilinestring() %>%
+                st_sfc() ->
                 st_new_line
         st_crs(st_new_line)=st_crs(st_data)
         df_attributes = data.frame(
@@ -45,5 +71,7 @@ add_river = function(
         st_crs(st_new_line)=st_crs(st_data)
         st_data %<>% rbind(st_new_line)
         setDT(st_data)
+        
         return(st_data)
+        options(warn = 1)
 }

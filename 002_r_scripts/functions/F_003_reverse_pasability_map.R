@@ -11,9 +11,10 @@
 
 
 reverse <- function(x) {
-        new_to   <- pull(dt_rivers[x, "FROM"])
-        new_from <- pull(dt_rivers[x, "TO"])
-        dt_rivers[x, c("FROM", "TO") := .(new_from, new_to)]
+        
+        new_to   <- pull(dt_rivers[ecoserv_id %in% x, "FROM"])
+        new_from <- pull(dt_rivers[ecoserv_id %in% x, "TO"])
+        dt_rivers[ecoserv_id %in% x, c("FROM", "TO") := .(new_from, new_to)]
         
 }
 
